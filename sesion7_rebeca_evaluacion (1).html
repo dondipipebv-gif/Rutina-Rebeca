@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 7 — Rebeca (evaluación)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F0; --surface:#FFFFFF; --surface-tint:#E3EEEA;
+    --ink:#16302C; --ink-soft:#5B6E68;
+    --teal:#1F5E5A; --teal-dark:#123E3B;
+    --amber:#E3A23D; --amber-soft:#FBE7C2;
+    --plum:#8B4B6B; --plum-soft:#F0DEE7;
+    --success:#4C8C6B; --success-soft:#DCEBE1;
+    --line:#CBD9D4;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', 'Courier New', monospace;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--font-body); padding:0 28px 28px; min-height:100vh;}
+  :focus-visible{outline:3px solid var(--teal); outline-offset:2px;}
+  .app{max-width:1000px; margin:0 auto;}
+
+  /* ---------- Cronómetro de sesión (sticky) ---------- */
+  .session-clock{
+    position:sticky; top:0; z-index:20;
+    background:var(--surface); border:1px solid var(--line); border-radius:0 0 var(--radius) var(--radius);
+    padding:14px 18px; margin:0 -28px 20px; padding-left:28px; padding-right:28px;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    box-shadow:0 4px 14px rgba(18,62,59,0.06);
+  }
+  .session-clock .label{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);}
+  .session-clock .time{font-family:var(--font-mono); font-size:26px; font-weight:600; color:var(--teal-dark); font-variant-numeric:tabular-nums;}
+  .session-clock .time.warn{color:var(--amber);}
+  .session-clock .time.over{color:var(--plum);}
+  .session-track{flex:1; min-width:120px; height:8px; border-radius:999px; background:var(--surface-tint); overflow:hidden;}
+  .session-fill{height:100%; border-radius:999px; background:var(--teal); width:0%; transition:width .3s ease, background .3s ease;}
+  .session-fill.warn{background:var(--amber);}
+  .session-fill.over{background:var(--plum);}
+  .session-clock button{
+    background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 14px;
+    font-family:var(--font-body); font-size:12.5px; cursor:pointer; color:var(--ink-soft);
+  }
+  .session-clock button:hover{border-color:var(--teal); color:var(--teal-dark);}
+
+  .topbar{display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:18px;}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--teal); display:block; margin-bottom:4px;}
+  h1{font-family:var(--font-display); font-weight:600; font-size:clamp(22px,3vw,30px); margin:0; color:var(--teal-dark); letter-spacing:-0.01em;}
+  .icon-btn{background:var(--surface); border:1px solid var(--line); color:var(--ink-soft); font-family:var(--font-body); font-size:13px; font-weight:500; padding:9px 14px; border-radius:999px; cursor:pointer;}
+  .icon-btn:hover{border-color:var(--teal); color:var(--teal-dark);}
+
+  .main-tabs{display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap;}
+  .main-tab{flex:1; min-width:150px; background:var(--surface); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; text-align:left; cursor:pointer; font-family:var(--font-body); color:var(--ink-soft); transition:border-color .15s ease, background .15s ease;}
+  .main-tab .num{font-family:var(--font-mono); font-size:11px; color:var(--ink-soft); display:block; margin-bottom:3px;}
+  .main-tab .lbl{font-size:13.5px; font-weight:600; color:var(--ink);}
+  .main-tab.active{border-color:var(--teal); background:var(--surface-tint);}
+  .main-tab.active .lbl{color:var(--teal-dark);}
+
+  .panel{display:none;}
+  .panel.visible{display:block;}
+
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:20px;}
+  .card h2{font-family:var(--font-display); font-size:17px; font-weight:600; color:var(--teal-dark); margin:0 0 4px 0;}
+  .card .hint{font-size:12.5px; color:var(--ink-soft); margin:0 0 16px 0; line-height:1.5;}
+
+  /* ===================== ACTIVIDAD 1 — Calidad vocal ===================== */
+  .main-grid{display:grid; grid-template-columns:1.2fr 1fr; gap:20px; margin-bottom:20px; align-items:stretch;}
+  @media (max-width:760px){ .main-grid{grid-template-columns:1fr;} }
+
+  .stopwatch-card{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+  .instruction{font-size:13px; color:var(--ink-soft); line-height:1.5; margin:0 0 10px 0; max-width:36ch;}
+  .instruction b{color:var(--ink); font-weight:600;}
+  .phase-chip{display:inline-block; background:var(--surface-tint); color:var(--teal-dark); border:1px solid var(--line); border-radius:999px; padding:6px 14px; font-size:12.5px; font-weight:500; margin-bottom:14px;}
+  .phase-chip.open-a{background:var(--amber-soft); border-color:var(--amber); color:#7a5416;}
+  .timer-display-big{font-family:var(--font-mono); font-size:56px; font-weight:500; color:var(--teal-dark); line-height:1; margin-bottom:18px; font-variant-numeric:tabular-nums;}
+  .timer-display-big .unit{font-size:24px; color:var(--ink-soft); margin-left:4px;}
+  .main-action{background:var(--teal); color:#fff; border:none; border-radius:999px; padding:16px 36px; font-family:var(--font-body); font-weight:600; font-size:16px; cursor:pointer;}
+  .main-action:hover{background:var(--teal-dark);}
+  .main-action.stop{background:var(--plum);}
+  .main-action.stop:hover{background:#733d57;}
+
+  .tag-row{display:flex; gap:10px; margin-top:16px;}
+  .tag-btn{padding:12px 18px; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); font-family:var(--font-body); font-weight:600; font-size:14px; cursor:pointer; color:var(--ink);}
+  .tag-btn.estable{border-color:var(--success); color:var(--teal-dark);}
+  .tag-btn.estable:hover{background:var(--success-soft);}
+  .tag-btn.inestable{border-color:var(--plum); color:var(--plum);}
+  .tag-btn.inestable:hover{background:var(--plum-soft);}
+  .tag-btn.descartar{border-color:var(--line); color:var(--ink-soft); font-weight:500;}
+  .tag-hint{font-size:12px; color:var(--ink-soft); margin-top:10px;}
+
+  .stats-card{display:flex; flex-direction:column; gap:18px;}
+  .stat-block-label{font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:8px; display:block;}
+  .gauge-track{position:relative; height:14px; background:var(--surface-tint); border-radius:999px; overflow:visible;}
+  .gauge-fill{height:100%; border-radius:999px; background:var(--amber); width:0%; transition:width .35s ease, background .3s ease;}
+  .gauge-fill.achieved{background:var(--success);}
+  .gauge-marker{position:absolute; top:-4px; left:80%; width:2px; height:22px; background:var(--plum);}
+  .gauge-marker::after{content:'80%'; position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:10px; color:var(--plum); white-space:nowrap;}
+  .gauge-caption{margin-top:14px; font-family:var(--font-mono); font-size:13px; color:var(--ink-soft);}
+  .gauge-caption b{color:var(--ink); font-family:var(--font-body);}
+  .counters{display:flex; gap:10px;}
+  .counter{flex:1; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; text-align:center;}
+  .counter .n{font-family:var(--font-mono); font-size:22px; font-weight:600; color:var(--teal-dark);}
+  .counter .lbl{font-size:11px; color:var(--ink-soft); margin-top:2px;}
+  .counter.estable .n{color:var(--success);}
+  .counter.inestable .n{color:var(--plum);}
+  .best-mark{background:var(--surface-tint); border:1px solid var(--line); border-radius:10px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center;}
+  .best-mark .lbl{font-size:13px; color:var(--ink-soft);}
+  .best-mark .val{font-family:var(--font-mono); font-size:20px; color:var(--teal-dark); font-weight:600;}
+
+  .timeline-header{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;}
+  .timeline-header span{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft);}
+  .timeline-track{position:relative; display:flex; align-items:flex-end; gap:8px; height:150px; padding:10px 6px 0; border-bottom:1.5px solid var(--line); overflow-x:auto;}
+  .timeline-ref-line{position:absolute; left:0; right:0; border-top:1.5px dashed var(--plum); pointer-events:none;}
+  .timeline-ref-line span{position:absolute; right:4px; top:-16px; font-family:var(--font-mono); font-size:9.5px; color:var(--plum); background:var(--surface); padding:0 4px;}
+  .timeline-empty{font-size:13px; color:var(--ink-soft); padding:40px 0; text-align:center; width:100%;}
+  .emission-bar-wrap{display:flex; flex-direction:column; align-items:center; min-width:34px; position:relative;}
+  .emission-bar{width:22px; border-radius:6px 6px 3px 3px; background:var(--success); min-height:6px;}
+  .emission-bar.inestable{background:var(--plum);}
+  .emission-dur{font-family:var(--font-mono); font-size:10px; color:var(--ink-soft); margin-top:6px;}
+
+  /* ===================== Reproductor genérico (Act. 2 y 3) ===================== */
+  .step-dots{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px;}
+  .step-dot{width:24px; height:8px; border-radius:999px; background:var(--surface-tint); border:1px solid var(--line);}
+  .step-dot.current{background:var(--amber); border-color:var(--amber);}
+  .step-dot.done{background:var(--success); border-color:var(--success);}
+
+  .player-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:32px; display:flex; flex-direction:column; align-items:center; text-align:center; min-height:380px; justify-content:center; gap:18px;}
+  .step-meta{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); letter-spacing:.03em;}
+  .step-title{font-family:var(--font-display); font-size:clamp(20px,2.6vw,26px); font-weight:500; color:var(--teal-dark); max-width:44ch; line-height:1.4;}
+  .step-sub{font-size:13px; color:var(--ink-soft); max-width:38ch;}
+
+  .ring-outer{width:170px; height:170px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:conic-gradient(var(--teal) 1turn, var(--surface-tint) 0turn);}
+  .ring-inner{width:130px; height:130px; border-radius:50%; background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:inset 0 0 0 1px var(--line);}
+  .ring-number{font-family:var(--font-mono); font-size:32px; font-weight:600; color:var(--teal-dark); line-height:1;}
+  .ring-label{font-family:var(--font-mono); font-size:11px; color:var(--ink-soft); margin-top:4px;}
+  .ring-outer.done-ring{background:conic-gradient(var(--success) 1turn, var(--surface-tint) 0turn);}
+
+  .action-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .secondary-btn{background:var(--bg); border:1px solid var(--line); color:var(--ink-soft); border-radius:999px; padding:14px 20px; font-family:var(--font-body); font-size:14px; cursor:pointer;}
+  .secondary-btn:hover{border-color:var(--teal); color:var(--teal-dark);}
+  .continue-btn{background:var(--amber); color:#4a3410; border:none; border-radius:999px; padding:15px 30px; font-family:var(--font-body); font-weight:600; font-size:15px; cursor:pointer;}
+  .continue-btn:hover{background:#c98a2c;}
+
+  .free-timer-display{font-family:var(--font-mono); font-size:48px; font-weight:600; color:var(--teal-dark); font-variant-numeric:tabular-nums;}
+
+  .rating-group{display:flex; flex-direction:column; gap:8px; width:100%; max-width:380px; text-align:left;}
+  .rating-group .rg-label{font-size:13px; font-weight:600; color:var(--ink);}
+  .rating-options{display:flex; gap:8px;}
+  .rating-options button{flex:1; padding:9px 8px; border-radius:8px; border:1.5px solid var(--line); background:var(--bg); font-size:12.5px; color:var(--ink-soft); cursor:pointer;}
+  .rating-options button.selected{border-color:var(--teal); background:var(--surface-tint); color:var(--teal-dark); font-weight:600;}
+
+  .complete-badge{display:inline-flex; align-items:center; gap:8px; background:var(--success-soft); color:var(--teal-dark); padding:12px 20px; border-radius:999px; font-weight:600; font-size:15px;}
+
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div>
+      <span class="eyebrow">Práctica para la casa · Rebeca</span>
+      <h1>Calidad vocal, canción y enfriamiento</h1>
+    </div>
+    <button class="icon-btn" id="resetAllBtn">Reiniciar todo</button>
+  </div>
+
+  <div class="main-tabs">
+    <button class="main-tab active" data-tab="act1"><span class="num">ACTIVIDAD 1</span><span class="lbl">Calidad vocal</span></button>
+    <button class="main-tab" data-tab="act2"><span class="num">ACTIVIDAD 2</span><span class="lbl">Calentamiento + canción</span></button>
+    <button class="main-tab" data-tab="act3"><span class="num">ACTIVIDAD 3</span><span class="lbl">Enfriamiento</span></button>
+  </div>
+
+  <!-- ===================== ACTIVIDAD 1 ===================== -->
+  <div class="panel visible" id="panel-act1">
+    <div class="main-grid">
+      <div class="card stopwatch-card">
+        <p class="instruction">Inicia la emisión: los primeros <b>10 segundos</b> son con <b>TVSO</b> (tubo con resistencia al agua, 3 cm). Al cumplirse el tiempo, saca el tubo del agua <b>sin cortar la emisión ni volver a tomar aire</b>, y sigue fonando con el mismo tubo, ahora sin resistencia. Detén el cronómetro cuando termines la emisión.</p>
+        <span class="phase-chip" id="act1PhaseChip">Esperando inicio</span>
+        <div class="timer-display-big"><span id="act1TimerDisplay">00.0</span><span class="unit">s</span></div>
+        <button class="main-action" id="act1MainActionBtn">Iniciar emisión</button>
+        <div class="tag-row" id="act1TagRow" style="display:none;">
+          <button class="tag-btn estable" id="act1TagEstable">Estable</button>
+          <button class="tag-btn inestable" id="act1TagInestable">Inestable</button>
+          <button class="tag-btn descartar" id="act1TagDescartar">Descartar</button>
+        </div>
+        <p class="tag-hint" id="act1TagHint" style="display:none;">Marca según cómo sentiste la emisión.</p>
+      </div>
+
+      <div class="card stats-card">
+        <div>
+          <span class="stat-block-label">Criterio de logro — estabilidad fonatoria</span>
+          <div class="gauge-track">
+            <div class="gauge-fill" id="act1GaugeFill"></div>
+            <div class="gauge-marker"></div>
+          </div>
+          <div class="gauge-caption" id="act1GaugeCaption">Aún sin emisiones registradas.</div>
+        </div>
+        <div>
+          <span class="stat-block-label">Emisiones</span>
+          <div class="counters">
+            <div class="counter estable"><div class="n" id="act1CountEstable">0</div><div class="lbl">Estables</div></div>
+            <div class="counter inestable"><div class="n" id="act1CountInestable">0</div><div class="lbl">Inestables</div></div>
+            <div class="counter"><div class="n" id="act1CountTotal">0</div><div class="lbl">Total</div></div>
+          </div>
+        </div>
+        <div class="best-mark"><span class="lbl">Duración máxima (TVSO + tubo sin resistencia)</span><span class="val" id="act1BestMark">—</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="timeline-header"><h2 style="margin:0;">Línea de fonación</h2><span id="act1TimelineCount">0 emisiones</span></div>
+      <div class="timeline-track" id="act1TimelineTrack"></div>
+    </div>
+
+    <div class="card">
+      <p class="hint" style="margin:0;">Tu meta: estabilidad en al menos el <b>80%</b> de las emisiones. La línea punteada marca el segundo 10, el momento en que sacas el tubo del agua (misma emisión, sin resistencia).</p>
+    </div>
+  </div>
+
+  <!-- ===================== ACTIVIDAD 2 ===================== -->
+  <div class="panel" id="panel-act2">
+    <div class="card">
+      <h2>Calentamiento → Canción completa → Autopercepción</h2>
+      <p class="hint">Sigue tu rutina de calentamiento, luego canta la canción completa, y al final registra cómo te sentiste.</p>
+      <div class="step-dots" id="act2StepDots"></div>
+    </div>
+    <div class="player-card" id="act2PlayerCard"></div>
+  </div>
+
+  <!-- ===================== ACTIVIDAD 3 ===================== -->
+  <div class="panel" id="panel-act3">
+    <div class="card">
+      <h2>Enfriamiento vocal</h2>
+      <p class="hint">Termina con esta secuencia de ejercicios después de cantar.</p>
+      <div class="step-dots" id="act3StepDots"></div>
+    </div>
+    <div class="player-card" id="act3PlayerCard"></div>
+  </div>
+
+</div>
+
+<script>
+function fmtMMSS(totalSeconds){
+  const m = Math.floor(totalSeconds/60).toString().padStart(2,'0');
+  const s = Math.floor(totalSeconds%60).toString().padStart(2,'0');
+  return m+':'+s;
+}
+
+/* =========================================================================
+   TABS
+   ========================================================================= */
+document.querySelectorAll('.main-tab').forEach(tab=>{
+  tab.onclick = ()=> switchTab(tab.dataset.tab);
+});
+function switchTab(tab){
+  document.querySelectorAll('.main-tab').forEach(t=> t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.panel').forEach(p=> p.classList.toggle('visible', p.id === 'panel-'+tab));
+}
+
+/* =========================================================================
+   ACTIVIDAD 1 — Calidad vocal (TVSO 10s automático → vocal abierta /a/)
+   ========================================================================= */
+const TVSO_SECONDS = 10;
+const act1 = { timerDeci:0, running:false, intervalId:null, emissions:[] };
+
+function fmtTimeDeci(deci){
+  const total = deci/10;
+  return total.toFixed(1).padStart(4,'0');
+}
+function act1UpdatePhaseChip(){
+  const chip = document.getElementById('act1PhaseChip');
+  const secs = act1.timerDeci/10;
+  if(!act1.running && act1.timerDeci===0){
+    chip.textContent = 'Esperando inicio';
+    chip.classList.remove('open-a');
+  } else if(secs < TVSO_SECONDS){
+    chip.textContent = 'TVSO — resistencia al agua (3 cm)';
+    chip.classList.remove('open-a');
+  } else {
+    chip.textContent = 'Tubo fuera del agua — sin resistencia';
+    chip.classList.add('open-a');
+  }
+}
+
+const act1MainBtn = document.getElementById('act1MainActionBtn');
+const act1TagRow = document.getElementById('act1TagRow');
+const act1TagHint = document.getElementById('act1TagHint');
+
+function act1Tick(){
+  act1.timerDeci++;
+  document.getElementById('act1TimerDisplay').textContent = fmtTimeDeci(act1.timerDeci);
+  act1UpdatePhaseChip();
+}
+function act1StartEmission(){
+  act1.running = true;
+  act1.timerDeci = 0;
+  document.getElementById('act1TimerDisplay').textContent = fmtTimeDeci(0);
+  act1.intervalId = setInterval(act1Tick, 100);
+  act1MainBtn.textContent = 'Detener emisión';
+  act1MainBtn.classList.add('stop');
+  act1TagRow.style.display = 'none';
+  act1TagHint.style.display = 'none';
+  act1UpdatePhaseChip();
+}
+function act1StopEmission(){
+  act1.running = false;
+  clearInterval(act1.intervalId);
+  act1MainBtn.textContent = 'Iniciar emisión';
+  act1MainBtn.classList.remove('stop');
+  act1TagRow.style.display = 'flex';
+  act1TagHint.style.display = 'block';
+}
+act1MainBtn.onclick = ()=>{ act1.running ? act1StopEmission() : act1StartEmission(); };
+
+function act1CommitEmission(stable){
+  const duration = act1.timerDeci/10;
+  if(duration>0) act1.emissions.push({ duration, stable, reachedOpenA: duration>=TVSO_SECONDS });
+  act1FinishTagging();
+}
+function act1FinishTagging(){
+  act1TagRow.style.display = 'none';
+  act1TagHint.style.display = 'none';
+  act1.timerDeci = 0;
+  document.getElementById('act1TimerDisplay').textContent = fmtTimeDeci(0);
+  act1UpdatePhaseChip();
+  renderAct1();
+}
+document.getElementById('act1TagEstable').onclick = ()=> act1CommitEmission(true);
+document.getElementById('act1TagInestable').onclick = ()=> act1CommitEmission(false);
+document.getElementById('act1TagDescartar').onclick = act1FinishTagging;
+
+function renderAct1Stats(){
+  const total = act1.emissions.length;
+  const stableCount = act1.emissions.filter(e=>e.stable).length;
+  const unstableCount = total - stableCount;
+  document.getElementById('act1CountEstable').textContent = stableCount;
+  document.getElementById('act1CountInestable').textContent = unstableCount;
+  document.getElementById('act1CountTotal').textContent = total;
+  const pct = total>0 ? Math.round((stableCount/total)*100) : 0;
+  const fill = document.getElementById('act1GaugeFill');
+  fill.style.width = pct+'%';
+  fill.classList.toggle('achieved', total>0 && pct>=80);
+  const caption = document.getElementById('act1GaugeCaption');
+  caption.innerHTML = total===0 ? 'Aún sin emisiones registradas.' : '<b>'+pct+'%</b> de emisiones estables ('+stableCount+' de '+total+') — objetivo 80%.';
+  const best = act1.emissions.reduce((m,e)=> e.duration>m?e.duration:m, 0);
+  document.getElementById('act1BestMark').textContent = best>0 ? best.toFixed(1)+' s' : '—';
+}
+function renderAct1Timeline(){
+  const track = document.getElementById('act1TimelineTrack');
+  document.getElementById('act1TimelineCount').textContent = act1.emissions.length + (act1.emissions.length===1?' emisión':' emisiones');
+  track.innerHTML = '';
+  const maxRef = 30;
+
+  const refLine = document.createElement('div');
+  refLine.className = 'timeline-ref-line';
+  refLine.style.bottom = (TVSO_SECONDS/maxRef*100)+'%';
+  const refLabel = document.createElement('span');
+  refLabel.textContent = '10s';
+  refLine.appendChild(refLabel);
+  track.appendChild(refLine);
+
+  if(act1.emissions.length===0){
+    const empty = document.createElement('div');
+    empty.className = 'timeline-empty';
+    empty.textContent = 'Aún no hay emisiones registradas. Presione "Iniciar emisión" para comenzar.';
+    track.appendChild(empty);
+    return;
+  }
+  act1.emissions.forEach(e=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'emission-bar-wrap';
+    const bar = document.createElement('div');
+    bar.className = 'emission-bar' + (e.stable?'':' inestable');
+    const heightPct = Math.min(100, (e.duration/maxRef)*100);
+    bar.style.height = Math.max(6, heightPct*1.1)+'px';
+    wrap.appendChild(bar);
+    const dur = document.createElement('div');
+    dur.className = 'emission-dur';
+    dur.textContent = e.duration.toFixed(1)+'s';
+    wrap.appendChild(dur);
+    track.appendChild(wrap);
+  });
+  track.scrollLeft = track.scrollWidth;
+}
+function renderAct1(){ renderAct1Stats(); renderAct1Timeline(); }
+
+/* =========================================================================
+   SINTETIZADOR DE ESCALA (sonido tipo teclado, Web Audio API)
+   ========================================================================= */
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function midiToName(midi){ return NOTE_NAMES[midi%12] + (Math.floor(midi/12)-1); }
+function midiToFreq(midi){ return 440 * Math.pow(2, (midi-69)/12); }
+
+// Patrón: grupo 1-2-3-2-1 (semitonos 0-2-4-2-0), luego 1s de silencio,
+// luego conector de 2 notas (raíz anterior -> nueva raíz), 1s de silencio,
+// siguiente grupo, 1s de silencio... subiendo cromáticamente
+// desde C4 (60) hasta que la raíz llega a C#5 (73) -> última nota F5 (77)
+const SILENCE_SECONDS = 1;
+function buildScaleSequence(){
+  const seq = [];
+  const pushGroup = (root)=> [0,2,4,2,0].forEach(off=> seq.push({type:'note', midi:root+off}));
+  const pushSilence = ()=> seq.push({type:'silence'});
+  const pushConnector = (fromRoot, toRoot)=>{
+    seq.push({type:'note', midi:fromRoot});
+    seq.push({type:'note', midi:toRoot});
+  };
+
+  pushGroup(60);
+  pushSilence();
+  for(let root=61; root<=73; root++){
+    pushConnector(root-1, root);
+    pushSilence();
+    pushGroup(root);
+    pushSilence();
+  }
+  return seq;
+}
+const SCALE_SEQUENCE = buildScaleSequence();
+const SCALE_NOTE_SECONDS = 0.5;
+const SCALE_MIN_MIDI = 60, SCALE_MAX_MIDI = 77;
+
+function buildKeyboardKeys(){
+  const keys = [];
+  for(let m=SCALE_MIN_MIDI; m<=SCALE_MAX_MIDI; m++){
+    keys.push({ midi:m, black: NOTE_NAMES[m%12].includes('#') });
+  }
+  return keys;
+}
+
+function playPianoNote(ctx, freq, dur){
+  const now = ctx.currentTime;
+  const osc1 = ctx.createOscillator(); osc1.type = 'triangle'; osc1.frequency.value = freq;
+  const osc2 = ctx.createOscillator(); osc2.type = 'sine'; osc2.frequency.value = freq*2;
+  const gain2 = ctx.createGain(); gain2.gain.value = 0.22;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(0.4, now+0.008);
+  master.gain.exponentialRampToValueAtTime(0.18, now+0.12);
+  master.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+  const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 3500;
+  osc1.connect(filter);
+  osc2.connect(gain2); gain2.connect(filter);
+  filter.connect(master); master.connect(ctx.destination);
+  osc1.start(now); osc2.start(now);
+  osc1.stop(now+dur+0.03); osc2.stop(now+dur+0.03);
+}
+
+
+function createStepPlayer(steps, dotsElId, cardElId){
+  const p = {
+    steps, currentIndex:0,
+    timerSeconds:0, timerTotal:0, running:false, intervalId:null,
+    freeSeconds:0, freeRunning:false, freeIntervalId:null,
+    autoperc: { comodidad:null, esfuerzo:null, facilidad:null },
+    scale: { playing:false, loop:false, index:0, intervalId:null, audioCtx:null }
+  };
+
+  function stopTimer(){ clearInterval(p.intervalId); p.intervalId=null; }
+  function ringBg(fraction){ return `conic-gradient(var(--teal) ${fraction}turn, var(--surface-tint) 0turn)`; }
+
+  function startTimer(totalSeconds){
+    stopTimer();
+    p.timerTotal = totalSeconds;
+    p.timerSeconds = totalSeconds;
+    p.running = true;
+    renderCard();
+    p.intervalId = setInterval(()=>{
+      if(!p.running) return;
+      p.timerSeconds -= 1;
+      if(p.timerSeconds<=0){ p.timerSeconds=0; p.running=false; stopTimer(); }
+      updateRingOnly();
+    }, 1000);
+  }
+  function pauseResume(){ p.running = !p.running; renderCard(); }
+  function restartTimer(){ startTimer(p.timerTotal || p.steps[p.currentIndex].seconds); }
+  function updateRingOnly(){
+    const ring = document.getElementById(cardElId+'-ring');
+    const num = document.getElementById(cardElId+'-ringnum');
+    if(!ring || !num) return;
+    const frac = p.timerSeconds / p.timerTotal;
+    ring.style.background = ringBg(frac);
+    ring.classList.toggle('done-ring', p.timerSeconds<=0);
+    num.textContent = fmtMMSS(p.timerSeconds);
+  }
+
+  function stopFree(){ clearInterval(p.freeIntervalId); p.freeIntervalId=null; }
+  function startFree(){
+    p.freeRunning = true;
+    p.freeIntervalId = setInterval(()=>{
+      p.freeSeconds++;
+      const disp = document.getElementById(cardElId+'-freedisp');
+      if(disp) disp.textContent = fmtMMSS(p.freeSeconds);
+    }, 1000);
+    renderCard();
+  }
+  function pauseFree(){ p.freeRunning=false; stopFree(); renderCard(); }
+
+  function scaleUpdateUI(midi){
+    const keyboard = document.getElementById(cardElId+'-scale-keyboard');
+    const label = document.getElementById(cardElId+'-scale-label');
+    if(keyboard){
+      keyboard.querySelectorAll('[data-midi]').forEach(k=>{
+        k.style.background = (midi!==null && parseInt(k.dataset.midi,10)===midi)
+          ? 'var(--amber)'
+          : (k.dataset.black==='1' ? '#2b2b2b' : '#fff');
+      });
+    }
+    if(label){
+      label.textContent = midi!==null ? ('Nota: '+midiToName(midi)) : '— pausa —';
+    }
+  }
+  function scalePlayBtnUpdate(){
+    const btn = document.getElementById(cardElId+'-scale-playbtn');
+    if(btn) btn.textContent = p.scale.playing ? 'Detener escala' : '▶ Reproducir escala';
+  }
+  function scaleTick(){
+    if(p.scale.index >= SCALE_SEQUENCE.length){
+      if(p.scale.loop){ p.scale.index = 0; } else { scaleStop(); return; }
+    }
+    const item = SCALE_SEQUENCE[p.scale.index];
+    p.scale.index++;
+    if(item.type === 'note'){
+      playPianoNote(p.scale.audioCtx, midiToFreq(item.midi), SCALE_NOTE_SECONDS-0.02);
+      scaleUpdateUI(item.midi);
+      p.scale.intervalId = setTimeout(scaleTick, SCALE_NOTE_SECONDS*1000);
+    } else {
+      scaleUpdateUI(null);
+      p.scale.intervalId = setTimeout(scaleTick, SILENCE_SECONDS*1000);
+    }
+  }
+  function scaleStart(){
+    if(!p.scale.audioCtx) p.scale.audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    p.scale.playing = true;
+    p.scale.index = 0;
+    scalePlayBtnUpdate();
+    scaleTick();
+  }
+  function scaleStop(){
+    clearTimeout(p.scale.intervalId); p.scale.intervalId = null;
+    p.scale.playing = false;
+    const keyboard = document.getElementById(cardElId+'-scale-keyboard');
+    const label = document.getElementById(cardElId+'-scale-label');
+    if(keyboard) keyboard.querySelectorAll('[data-midi]').forEach(k=>{
+      k.style.background = k.dataset.black==='1' ? '#2b2b2b' : '#fff';
+    });
+    if(label) label.textContent = 'Presione reproducir para escuchar la guía de la escala.';
+    scalePlayBtnUpdate();
+  }
+
+  function goToStep(idx){
+    stopTimer(); stopFree(); scaleStop();
+    p.currentIndex = idx;
+    p.running = false; p.timerTotal = 0; p.timerSeconds = 0;
+    p.freeRunning = false; p.freeSeconds = 0;
+    renderAll();
+  }
+  function nextStep(){ goToStep(p.currentIndex+1); }
+
+  function renderDots(){
+    const wrap = document.getElementById(dotsElId);
+    wrap.innerHTML = '';
+    p.steps.forEach((s,i)=>{
+      const dot = document.createElement('div');
+      dot.className = 'step-dot' + (i===p.currentIndex?' current':'') + (i<p.currentIndex?' done':'');
+      wrap.appendChild(dot);
+    });
+  }
+
+  function renderCard(){
+    const card = document.getElementById(cardElId);
+    card.innerHTML = '';
+    const idx = p.currentIndex;
+
+    if(idx >= p.steps.length){
+      const badge = document.createElement('div');
+      badge.className = 'complete-badge';
+      badge.textContent = '✓ Actividad completada';
+      card.appendChild(badge);
+      const restartBtn = document.createElement('button');
+      restartBtn.className = 'secondary-btn';
+      restartBtn.textContent = 'Reiniciar actividad';
+      restartBtn.onclick = ()=>{ p.autoperc = {comodidad:null,esfuerzo:null,facilidad:null}; goToStep(0); };
+      card.appendChild(restartBtn);
+      return;
+    }
+
+    const step = p.steps[idx];
+    const meta = document.createElement('div');
+    meta.className = 'step-meta';
+    meta.textContent = 'PASO '+(idx+1)+' DE '+p.steps.length;
+    card.appendChild(meta);
+
+    if(step.type === 'timed'){
+      const title = document.createElement('div');
+      title.className = 'step-title';
+      title.textContent = step.label;
+      card.appendChild(title);
+
+      const isTiming = p.timerTotal === step.seconds;
+      const ringOuter = document.createElement('div');
+      ringOuter.className = 'ring-outer' + (isTiming && p.timerSeconds<=0 ? ' done-ring':'');
+      ringOuter.id = cardElId+'-ring';
+      const frac = isTiming ? (p.timerSeconds/p.timerTotal) : 1;
+      ringOuter.style.background = ringBg(frac);
+      const ringInner = document.createElement('div');
+      ringInner.className = 'ring-inner';
+      const ringNum = document.createElement('div');
+      ringNum.className = 'ring-number';
+      ringNum.id = cardElId+'-ringnum';
+      ringNum.textContent = isTiming ? fmtMMSS(p.timerSeconds) : fmtMMSS(step.seconds);
+      const ringLbl = document.createElement('div');
+      ringLbl.className = 'ring-label';
+      ringLbl.textContent = 'DURACIÓN GUÍA';
+      ringInner.appendChild(ringNum);
+      ringInner.appendChild(ringLbl);
+      ringOuter.appendChild(ringInner);
+      card.appendChild(ringOuter);
+
+      const actions = document.createElement('div');
+      actions.className = 'action-row';
+      const playBtn = document.createElement('button');
+      playBtn.className = 'secondary-btn';
+      playBtn.textContent = (isTiming && p.running) ? 'Pausar' : (isTiming ? 'Reanudar' : 'Iniciar temporizador');
+      playBtn.onclick = ()=>{ isTiming ? pauseResume() : startTimer(step.seconds); };
+      const restartBtn = document.createElement('button');
+      restartBtn.className = 'secondary-btn';
+      restartBtn.textContent = 'Reiniciar';
+      restartBtn.onclick = ()=> startTimer(step.seconds);
+      actions.appendChild(playBtn);
+      actions.appendChild(restartBtn);
+      card.appendChild(actions);
+
+      if(step.scale){
+        const scaleLabel = document.createElement('div');
+        scaleLabel.id = cardElId+'-scale-label';
+        scaleLabel.style.fontFamily = 'var(--font-mono)';
+        scaleLabel.style.fontSize = '12px';
+        scaleLabel.style.color = 'var(--ink-soft)';
+        scaleLabel.textContent = p.scale.playing ? '' : 'Presione reproducir para escuchar la guía de la escala.';
+        card.appendChild(scaleLabel);
+
+        const keyboard = document.createElement('div');
+        keyboard.id = cardElId+'-scale-keyboard';
+        keyboard.style.display = 'flex';
+        keyboard.style.gap = '2px';
+        keyboard.style.justifyContent = 'center';
+        buildKeyboardKeys().forEach(k=>{
+          const keyEl = document.createElement('div');
+          keyEl.dataset.midi = k.midi;
+          keyEl.dataset.black = k.black ? '1' : '0';
+          keyEl.style.width = k.black ? '14px' : '20px';
+          keyEl.style.height = k.black ? '38px' : '56px';
+          keyEl.style.background = k.black ? '#2b2b2b' : '#fff';
+          keyEl.style.border = '1px solid var(--line)';
+          keyEl.style.borderRadius = '0 0 4px 4px';
+          keyEl.style.transition = 'background .1s ease';
+          keyboard.appendChild(keyEl);
+        });
+        card.appendChild(keyboard);
+
+        const scaleActions = document.createElement('div');
+        scaleActions.className = 'action-row';
+        const scalePlayBtn = document.createElement('button');
+        scalePlayBtn.className = 'secondary-btn';
+        scalePlayBtn.id = cardElId+'-scale-playbtn';
+        scalePlayBtn.textContent = p.scale.playing ? 'Detener escala' : '▶ Reproducir escala';
+        scalePlayBtn.onclick = ()=>{ p.scale.playing ? scaleStop() : scaleStart(); };
+        const loopLabel = document.createElement('label');
+        loopLabel.style.display = 'flex';
+        loopLabel.style.alignItems = 'center';
+        loopLabel.style.gap = '6px';
+        loopLabel.style.fontSize = '12.5px';
+        loopLabel.style.color = 'var(--ink-soft)';
+        const loopCheckbox = document.createElement('input');
+        loopCheckbox.type = 'checkbox';
+        loopCheckbox.checked = p.scale.loop;
+        loopCheckbox.onchange = ()=>{ p.scale.loop = loopCheckbox.checked; };
+        loopLabel.appendChild(loopCheckbox);
+        loopLabel.appendChild(document.createTextNode('Repetir automáticamente'));
+        scaleActions.appendChild(scalePlayBtn);
+        scaleActions.appendChild(loopLabel);
+        card.appendChild(scaleActions);
+      }
+
+      const continueBtn = document.createElement('button');
+      continueBtn.className = 'continue-btn';
+      continueBtn.textContent = idx < p.steps.length-1 ? 'Marcar completado y continuar →' : 'Marcar completado';
+      continueBtn.onclick = nextStep;
+      card.appendChild(continueBtn);
+      return;
+    }
+
+    if(step.type === 'free'){
+      const title = document.createElement('div');
+      title.className = 'step-title';
+      title.textContent = step.label;
+      card.appendChild(title);
+      if(step.sub){
+        const sub = document.createElement('div');
+        sub.className = 'step-sub';
+        sub.textContent = step.sub;
+        card.appendChild(sub);
+      }
+
+      const disp = document.createElement('div');
+      disp.className = 'free-timer-display';
+      disp.id = cardElId+'-freedisp';
+      disp.textContent = fmtMMSS(p.freeSeconds);
+      card.appendChild(disp);
+
+      const actions = document.createElement('div');
+      actions.className = 'action-row';
+      const playBtn = document.createElement('button');
+      playBtn.className = 'secondary-btn';
+      playBtn.textContent = p.freeRunning ? 'Pausar' : (p.freeSeconds>0 ? 'Reanudar' : 'Iniciar');
+      playBtn.onclick = ()=>{ p.freeRunning ? pauseFree() : startFree(); };
+      const restartBtn = document.createElement('button');
+      restartBtn.className = 'secondary-btn';
+      restartBtn.textContent = 'Reiniciar';
+      restartBtn.onclick = ()=>{ stopFree(); p.freeRunning=false; p.freeSeconds=0; renderCard(); };
+      actions.appendChild(playBtn);
+      actions.appendChild(restartBtn);
+      card.appendChild(actions);
+
+      const continueBtn = document.createElement('button');
+      continueBtn.className = 'continue-btn';
+      continueBtn.textContent = 'Continuar →';
+      continueBtn.onclick = nextStep;
+      card.appendChild(continueBtn);
+      return;
+    }
+
+    if(step.type === 'autopercepcion'){
+      const title = document.createElement('div');
+      title.className = 'step-title';
+      title.textContent = 'Autopercepción de la emisión';
+      card.appendChild(title);
+
+      ['comodidad','esfuerzo','facilidad'].forEach(dim=>{
+        const group = document.createElement('div');
+        group.className = 'rating-group';
+        const label = document.createElement('div');
+        label.className = 'rg-label';
+        label.textContent = dim.charAt(0).toUpperCase()+dim.slice(1);
+        const opts = document.createElement('div');
+        opts.className = 'rating-options';
+        ['Baja','Media','Alta'].forEach(level=>{
+          const btn = document.createElement('button');
+          btn.textContent = level;
+          if(p.autoperc[dim]===level) btn.classList.add('selected');
+          btn.onclick = ()=>{ p.autoperc[dim]=level; renderCard(); };
+          opts.appendChild(btn);
+        });
+        group.appendChild(label);
+        group.appendChild(opts);
+        card.appendChild(group);
+      });
+
+      const continueBtn = document.createElement('button');
+      continueBtn.className = 'continue-btn';
+      continueBtn.textContent = idx < p.steps.length-1 ? 'Continuar →' : 'Finalizar';
+      continueBtn.onclick = nextStep;
+      card.appendChild(continueBtn);
+      return;
+    }
+  }
+
+  function renderAll(){ renderDots(); renderCard(); }
+
+  return { renderAll, reset: ()=>goToStep(0), _p:p };
+}
+
+/* ---------- Actividad 2: calentamiento fijo + canción + autopercepción ---------- */
+const act2Steps = [
+  { type:'timed', label:'Vibración labial + Glissandos ascendentes', seconds:150 },
+  { type:'timed', label:'Resistencia al agua (3 cm) + Glissandos ascendentes', seconds:150 },
+  { type:'timed', label:'Resistencia al agua (3 cm) + Escalas ascendentes', seconds:150, scale:true },
+  { type:'free',  label:'Cantar la canción completa (demandante)', sub:'Cronómetro libre — registre cuánto dura la interpretación.' },
+  { type:'autopercepcion' }
+];
+const act2Player = createStepPlayer(act2Steps, 'act2StepDots', 'act2PlayerCard');
+
+/* ---------- Actividad 3: enfriamiento ---------- */
+const act3Steps = [
+  { type:'timed', label:'Bostezo-suspiro', seconds:30 },
+  { type:'timed', label:'Masticación', seconds:30 },
+  { type:'timed', label:'Rotación lingual en vestíbulo oral', seconds:30 }
+];
+const act3Player = createStepPlayer(act3Steps, 'act3StepDots', 'act3PlayerCard');
+
+/* =========================================================================
+   RESET GLOBAL
+   ========================================================================= */
+document.getElementById('resetAllBtn').onclick = ()=>{
+  clearInterval(act1.intervalId);
+  act1.timerDeci=0; act1.running=false; act1.emissions=[];
+  act1MainBtn.textContent = 'Iniciar emisión';
+  act1MainBtn.classList.remove('stop');
+  act1TagRow.style.display='none'; act1TagHint.style.display='none';
+  document.getElementById('act1TimerDisplay').textContent = fmtTimeDeci(0);
+  act1UpdatePhaseChip();
+  renderAct1();
+
+  act2Player.reset();
+  act3Player.reset();
+};
+
+/* =========================================================================
+   INICIALIZACIÓN
+   ========================================================================= */
+act1UpdatePhaseChip();
+renderAct1();
+act2Player.renderAll();
+act3Player.renderAll();
+</script>
+</body>
+</html>
